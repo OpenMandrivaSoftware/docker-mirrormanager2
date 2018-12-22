@@ -18,3 +18,7 @@ server {
   
   BEWARE:
 Some of the scripts provided with this server are very memory hungry this is particularly true of the crawler whose default setting would use 32Gb of memory.
+
+  NOTE:
+  This is the 0.8.4 release hacked to work with Docker and python3 some parts may still be broken. An update to the latest git will be merged soon.
+  
