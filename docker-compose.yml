@@ -1,0 +1,22 @@
+version: "3"
+services:
+ mirrormanager:
+  image: mirrmn2-py3-prst
+  ports:
+  - '9191:9191'
+  container_name: mirrorman
+  restart: always
+
+ joomla:
+  image: nginx-prst
+  ports:
+  - '8080:80'
+  container_name: nginx_uwsgi
+  volumes:
+  - ./vhosts:/var/www/vhosts/:rw
+  - ./sites:/etc/nginx/sites-available:rw
+  command: no-joomla
+  environment:
+  - SERVER_NAME=whtt.co
+  depends_on:
+  - mirrormanager

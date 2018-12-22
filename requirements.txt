@@ -1,0 +1,13 @@
+# List of the dependencies for the mirrormanager flask server
+
+flask
+flask-admin
+flask-wtf
+wtforms
+SQLAlchemy>=0.7
+python-fedora
+python-openid
+python-openid-cla
+python-openid-teams
+IPy
+dnspython
