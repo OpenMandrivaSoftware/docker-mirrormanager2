@@ -22,3 +22,5 @@ Some of the scripts provided with this server are very memory hungry this is par
 To make a start build the images with "docker build -f Dockerfile.p3 -t mirrmn2-py3-prst ."
 cd joomla-docker 
 "docker build -t nginx-prst ."
+  NOTE:
+  This is the 0.8.4 release hacked to work with Docker and python3 some parts may still be broken. An update to the latest git will be merged soon.
