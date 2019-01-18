@@ -18,3 +18,7 @@ server {
   
   BEWARE:
 Some of the scripts provided with this server are very memory hungry this is particularly true of the crawler whose default setting would use 32Gb of memory.
+
+To make a start build the images with "docker build -f Dockerfile.p3 -t mirrmn2-py3-prst ."
+cd joomla-docker 
+"docker build -t nginx-prst ."

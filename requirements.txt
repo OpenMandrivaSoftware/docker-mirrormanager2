@@ -3,9 +3,9 @@
 flask
 flask-admin
 flask-wtf
+flask-user
 wtforms
 SQLAlchemy>=0.7
-python-fedora
 python-openid
 python-openid-cla
 python-openid-teams

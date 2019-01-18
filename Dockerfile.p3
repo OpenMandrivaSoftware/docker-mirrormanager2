@@ -7,15 +7,19 @@ RUN dnf --nogpgcheck --refresh --assumeyes --nodocs --setopt=install_weak_deps=F
 RUN echo "source /home/mman/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc \
  && /usr/sbin/adduser mman \
  && cd /home/mman 
-COPY  mirrormanager2-0.8.4-py3-none-any.whl Flask_XML_RPC_Re-0.1.3-py3-none-any.whl createdb.py requirements.txt requirements_mirrorlist.txt runtests.sh runserver.py Flask_XML_RPC_Re-0.1.3-py3-none-any.whl mirrormanager2.wsgi /home/mman/ 
+COPY  mirrormanager2-0.8.4-py3-none-any.whl Flask_XML_RPC_Re-0.1.3-py3-none-any.whl createdb.py requirements.txt requirements_mirrorlist.txt runtests.sh runserver.py mirrormanager2.wsgi /home/mman/
 COPY mirrormanager2.cfg /etc/mirrormanager/mirrormanager.cfg
-RUN dnf --nogpgcheck --assumeyes --nodocs --setopt=install_weak_deps=False install python-virtualenv python-pip python-devel glibc-devel geoip-devel mc task-devel \
+COPY mirrorlist-0.8.4.tar.gz gnutar-1.30-1-omv4000.x86_64.rpm  supervisor-3.0-1-omv4000.noarch.rpm /
+# RUN /usr/bin/gtar --warning=no-unknown-keyword  xzvf /mirrorlist-0.8.4.tar.gz
+RUN dnf --nogpgcheck --assumeyes --nodocs --setopt=install_weak_deps=False install python-virtualenv python-pip python-devel glibc-devel geoip-devel mc task-devel tar /gnutar-1.30-1-omv4000.x86_64.rpm \
+ && /usr/bin/gtar  xzvf --warning=no-unknown-keyword  /mirrorlist-0.8.4.tar.gz \
  && mkdir -p /home/mman/pyvirt/ 
-RUN virtualenv /home/mman/pyvirt/mirrormanager
-RUN echo "source /home/mman/pyvirt/mirrormanager/bin/activate" > /etc/bashrc \
+RUN virtualenv /home/mman/pyvirt/mirrormanager \
+ &&   echo "source /home/mman/pyvirt/mirrormanager/bin/activate" > /etc/bashrc \
  &&  /bin/bash -c  'source /home/mman/pyvirt/mirrormanager/bin/activate && pip install -r /home/mman/requirements.txt \
  &&  pip install /home/mman/Flask_XML_RPC_Re-0.1.3-py3-none-any.whl /home/mman/mirrormanager2-0.8.4-py3-none-any.whl \
  &&  pip install uwsgi' 
+# RUN  tar xzvf /home/mman/mirrorlist-0.8.4.tar.gz --no-same-permissions
 RUN  dnf autoremove --assumeyes \
  && dnf clean all \
  && rm -rf /var/cache/dnf/* \
