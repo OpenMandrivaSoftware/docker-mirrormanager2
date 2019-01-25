@@ -1,26 +1,36 @@
 FROM openmandriva/cooker
 MAINTAINER alexander@mezon.ru
-ENV PATH=/home/mman/pyvirt/mirrormanager/bin:$PATH
+#ENV PATH=$PATH:/var/lib/mirrormanager/pyvirt/mirrormanager/bin
 RUN dnf --nogpgcheck --refresh --assumeyes --nodocs --setopt=install_weak_deps=False upgrade \
  && rm -f /etc/localtime \
  && ln -s /usr/share/zoneinfo/UTC /etc/localtime
-RUN echo "source /home/mman/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc \
- && /usr/sbin/adduser mman \
- && cd /home/mman 
-COPY  mirrormanager2-0.8.4-py3-none-any.whl Flask_XML_RPC_Re-0.1.3-py3-none-any.whl createdb.py requirements.txt requirements_mirrorlist.txt runtests.sh runserver.py mirrormanager2.wsgi /home/mman/
-COPY mirrormanager2.cfg /etc/mirrormanager/mirrormanager.cfg
-COPY mirrorlist-0.8.4.tar.gz gnutar-1.30-1-omv4000.x86_64.rpm  supervisor-3.0-1-omv4000.noarch.rpm /
-# RUN /usr/bin/gtar --warning=no-unknown-keyword  xzvf /mirrorlist-0.8.4.tar.gz
-RUN dnf --nogpgcheck --assumeyes --nodocs --setopt=install_weak_deps=False install python-virtualenv python-pip python-devel glibc-devel geoip-devel mc task-devel tar /gnutar-1.30-1-omv4000.x86_64.rpm \
- && /usr/bin/gtar  xzvf --warning=no-unknown-keyword  /mirrorlist-0.8.4.tar.gz \
- && mkdir -p /home/mman/pyvirt/ 
-RUN virtualenv /home/mman/pyvirt/mirrormanager \
- &&   echo "source /home/mman/pyvirt/mirrormanager/bin/activate" > /etc/bashrc \
- &&  /bin/bash -c  'source /home/mman/pyvirt/mirrormanager/bin/activate && pip install -r /home/mman/requirements.txt \
- &&  pip install /home/mman/Flask_XML_RPC_Re-0.1.3-py3-none-any.whl /home/mman/mirrormanager2-0.8.4-py3-none-any.whl \
- &&  pip install uwsgi' 
-# RUN  tar xzvf /home/mman/mirrorlist-0.8.4.tar.gz --no-same-permissions
-RUN  dnf autoremove --assumeyes \
+# This is needed to ensure that docker starts the python virtual environment
+RUN echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc \
+RUN groupadd -r mirrormanager \
+ && useradd -r -m  -g mirrormanager -d /var/lib/mirrormanager -s /sbin/nologin -c "MirrorManager" mirrormanager \
+ && cd /var/lib/mirrormanager \
+ && mkdir -p /var/lib/mirrormanager/pyvirt \
+ && mkdir -p /etc/uwsgi/vassals/
+# Copy acrosss the whl packages and the basic files to allow their installation. 
+# Note that the original flask rpc package is now unmaintained as is replaced with a rewrite.
+COPY  mirrormanager2-0.9.0-py3-none-any.whl Flask_XML_RPC_Re-0.1.3-py3-none-any.whl createdb.py requirements.txt requirements_mirrorlist.txt \
+runtests.sh runserver.py mirrormanager2.wsgi /var/lib/mirrormanager/
+ADD mirrorlist-0.9.tar.gz client-0.9.tar.gz utility-0.9.tar.gz  mirrormanager.cron setup.sh country_continent.csv mirrormanager.ini mirrorlist_client.ini mirrormanager2.cfg \
+mirrormanagerOMA.ini mirrorlist_clientOMA.ini alembic.ini supervisord.conf /
+RUN dnf --nogpgcheck --assumeyes --refresh --nodocs --enablerepo=cooker-x86_64-contrib --setopt=install_weak_deps=False install python-virtualenv python-pip glibc-devel 'pkgconfig(libpcre)' mc cronie git
+RUN pip install  git+https://github.com/Supervisor/supervisor
+#RUN echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc
+RUN virtualenv /var/lib/mirrormanager/pyvirt/mirrormanager \
+ && echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" > /etc/bashrc \
+ && /bin/bash -c  'source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate' \
+ && pip install -r /var/lib/mirrormanager/requirements.txt \
+ && pip install -r /var/lib/mirrormanager/requirements_mirrorlist.txt \
+ && pip install  /var/lib/mirrormanager/Flask_XML_RPC_Re-0.1.3-py3-none-any.whl /var/lib/mirrormanager/mirrormanager2-0.9.0-py3-none-any.whl 
+# Install the OpenMandriva web pages
+COPY openmandriva $/home_base/pyvirt/mirrormanager/lib/python3.7/site-packages/mirrormanager2/static/openmandriva
+COPY templates/openmandriva /var/lib/mirrormanager/pyvirt/mirrormanager/lib/python3.7/site-packages/mirrormanager2/templates/openmandriva
+# Clean up 
+ RUN  dnf autoremove --assumeyes \
  && dnf clean all \
  && rm -rf /var/cache/dnf/* \
  && rm -rf /var/share/locale/* \
@@ -29,7 +39,8 @@ RUN  dnf autoremove --assumeyes \
  && rm -rf /tmp/* \
  && rm -rf /var/lib/rpm/__db.* \
  && rm -rf /usr/share/man/ /usr/share/cracklib /usr/share/doc
-RUN /bin/bash -c 'python  /home/mman/createdb.py'
-COPY entrypoint.sh /sbin/entrypoint.sh
-ENTRYPOINT ["/sbin/entrypoint.sh"]
+RUN /setup.sh
+CMD ["/usr/bin/supervisord -c /etc/supervisor.d"]
+#COPY entrypoint.sh /sbin/entrypoint.sh
+#ENTRYPOINT ["/sbin/entrypoint.sh"]
 EXPOSE 3031 9191

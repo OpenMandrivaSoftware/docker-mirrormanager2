@@ -2,6 +2,7 @@
 
 flask
 flask-admin
+flask-xml-rpc-re
 flask-wtf
 flask-user
 wtforms
@@ -11,3 +12,4 @@ python-openid-cla
 python-openid-teams
 IPy
 dnspython
+uwsgi
