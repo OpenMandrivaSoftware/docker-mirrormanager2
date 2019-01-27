@@ -1,25 +1,24 @@
 FROM openmandriva/cooker
 MAINTAINER alexander@mezon.ru
-#ENV PATH=$PATH:/var/lib/mirrormanager/pyvirt/mirrormanager/bin
+ENV PATH=/var/lib/mirrormanager/pyvirt/mirrormanager/bin:$PATH
 RUN dnf --nogpgcheck --refresh --assumeyes --nodocs --setopt=install_weak_deps=False upgrade \
  && rm -f /etc/localtime \
  && ln -s /usr/share/zoneinfo/UTC /etc/localtime
+# Copy acrosss the whl packages and the basic files to allow their installation. 
+# Note that the original flask rpc package is now unmaintained as is replaced with a rewrite.
+ADD mirrorlist-0.9.tar.gz client-0.9.tar.gz utility-0.9.tar.gz  mirrormanager.cron setup.sh country_continent.csv mirrormanager.ini mirrorlist_client.ini mirrormanager2.cfg \
+mirrormanagerOMA.ini mirrorlist_clientOMA.ini alembic.ini supervisord.conf /
+RUN dnf --nogpgcheck --assumeyes --refresh --nodocs --enablerepo=cooker-x86_64-contrib --setopt=install_weak_deps=False install python-virtualenv python-pip glibc-devel 'pkgconfig(libpcre)' mc cronie git
 # This is needed to ensure that docker starts the python virtual environment
 RUN echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc \
-RUN groupadd -r mirrormanager \
+ && groupadd -r mirrormanager \
  && useradd -r -m  -g mirrormanager -d /var/lib/mirrormanager -s /sbin/nologin -c "MirrorManager" mirrormanager \
  && cd /var/lib/mirrormanager \
  && mkdir -p /var/lib/mirrormanager/pyvirt \
  && mkdir -p /etc/uwsgi/vassals/
-# Copy acrosss the whl packages and the basic files to allow their installation. 
-# Note that the original flask rpc package is now unmaintained as is replaced with a rewrite.
 COPY  mirrormanager2-0.9.0-py3-none-any.whl Flask_XML_RPC_Re-0.1.3-py3-none-any.whl createdb.py requirements.txt requirements_mirrorlist.txt \
-runtests.sh runserver.py mirrormanager2.wsgi /var/lib/mirrormanager/
-ADD mirrorlist-0.9.tar.gz client-0.9.tar.gz utility-0.9.tar.gz  mirrormanager.cron setup.sh country_continent.csv mirrormanager.ini mirrorlist_client.ini mirrormanager2.cfg \
-mirrormanagerOMA.ini mirrorlist_clientOMA.ini alembic.ini supervisord.conf /
-RUN dnf --nogpgcheck --assumeyes --refresh --nodocs --enablerepo=cooker-x86_64-contrib --setopt=install_weak_deps=False install python-virtualenv python-pip glibc-devel 'pkgconfig(libpcre)' mc cronie git
-RUN pip install  git+https://github.com/Supervisor/supervisor
-#RUN echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" >> /etc/bashrc
+runtests.sh runserver.py mirrormanager2.wsgi  supervisor-4.0.0.dev0-py2.py3-none-any.whl /var/lib/mirrormanager/
+RUN pip install  /var/lib/mirrormanager/supervisor-4.0.0.dev0-py2.py3-none-any.whl
 RUN virtualenv /var/lib/mirrormanager/pyvirt/mirrormanager \
  && echo "source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate" > /etc/bashrc \
  && /bin/bash -c  'source /var/lib/mirrormanager/pyvirt/mirrormanager/bin/activate' \
@@ -40,7 +39,5 @@ COPY templates/openmandriva /var/lib/mirrormanager/pyvirt/mirrormanager/lib/pyth
  && rm -rf /var/lib/rpm/__db.* \
  && rm -rf /usr/share/man/ /usr/share/cracklib /usr/share/doc
 RUN /setup.sh
-CMD ["/usr/bin/supervisord -c /etc/supervisor.d"]
-#COPY entrypoint.sh /sbin/entrypoint.sh
-#ENTRYPOINT ["/sbin/entrypoint.sh"]
+ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
 EXPOSE 3031 9191
