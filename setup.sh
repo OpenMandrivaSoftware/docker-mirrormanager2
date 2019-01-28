@@ -26,7 +26,10 @@ mkdir -p  /var/lib/mirrormanager/pyvirt/mirrormanager/usr/share/mirrormanager/
 mkdir -p /var/log/supervisor/
 # Location for ini files
 mkdir -p /etc/supervisord.d/
-
+# Map data
+mkdir -p /var/www/mirrormanager-statistics/data/propagation
+# Statistics
+mkfir -p /var/www/mirrormanager-statistics/data
 
 install -m 644 utility/mm2_crawler.logrotate \
     /etc/logrotate.d/mm2_crawler
