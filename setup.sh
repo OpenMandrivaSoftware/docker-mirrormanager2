@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Make needed directories
 # MirrorManager configuration file
@@ -90,7 +90,7 @@ install -m 0644 /mirrorlist_clientOMA.ini \
     /etc/supervisord.d/mirrorlist_clientOMA.ini
 install -m 0644 /mirrormanagerOMA.ini \
     /etc/supervisord.d/mirrormanagerOMA.ini
-    
+
 #cp /mirrorlist/systemd/mirrorlist-server.service /lib/systemd/system/
 #cp /mirrorlist/systemd/mirrormanager_tempfile.conf  /usr/lib/tmpfiles.d/
 #cp  /supervisord.conf /etc/supervisord/conf.d/
@@ -113,4 +113,4 @@ mv  /supervisord.conf /etc/supervisord.conf
 /bin/rm -r /client /mirrorlist
 
 cd /var/lib/mirrormanager
-/bin/rm Flask_XML_RPC_Re-0.1.3-py3-none-any.whl  createdb.py  mirrormanager2-0.9.0-py3-none-any.whl  requirements.txt  requirements_mirrorlist.txt  runserver.py  runtests.sh
+/bin/rm Flask_XML_RPC_Re-0.1.4-py3-none-any.whl createdb.py  mirrormanager2-0.9.0-py3-none-any.whl  requirements.txt  requirements_mirrorlist.txt  runserver.py  runtests.sh
